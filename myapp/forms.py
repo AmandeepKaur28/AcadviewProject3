@@ -19,3 +19,8 @@ class PostForm(forms.ModelForm):
         fields=['image','caption']
 
 
+class LikeForm(forms.ModelForm):
+    class Meta:
+        model = LikeModel
+        fields = ['post']
+
