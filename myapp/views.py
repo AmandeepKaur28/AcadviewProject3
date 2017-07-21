@@ -137,6 +137,12 @@ def add_category(post):
     model = app.models.get("general-v1.3")
     response = model.predict_by_url(url=post.image_url)
 
+
+    # Logo model
+    #model = app.models.get('logo')
+
+    #response = model.predict_by_url(url=post.image_url)
+
     if response["status"]["code"] == 10000:
         if response["outputs"]:
             if response["outputs"][0]["data"]:

@@ -39,6 +39,9 @@ class PostModel(models.Model):
   def comments(self):
     return CommentModel.objects.filter(post=self).order_by('created_on')
 
+  @property
+  def categories(self):
+    return CategoryModel.objects.filter(post=self)
 
 class LikeModel(models.Model):
   user = models.ForeignKey(UserModel)

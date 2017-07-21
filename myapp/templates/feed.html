@@ -34,6 +34,12 @@
 
             </form>
     </div>
+    <div>
+            <p> Categories: </p>
+            {% for category in post.categories %}
+                <span> {{ category.category_text }} </span>
+            {% endfor %}
+        </div>
 <div>
             <form method="POST" action="/comment/">
                 {% csrf_token %}
