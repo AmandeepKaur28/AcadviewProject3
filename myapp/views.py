@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 from myapp.forms import SignUpForm
 from myapp.forms import LoginForm ,PostForm,LikeForm,CommentForm
-from models import UserModel,SessionToken,PostModel,LikeModel,CommentModel
+from models import UserModel,SessionToken,PostModel,LikeModel,CommentModel,CategoryModel
 from django.contrib.auth.hashers import make_password,check_password
 from django.shortcuts import render,redirect
 from DjangoProject.settings import BASE_DIR
@@ -10,6 +10,7 @@ from imgurpython import ImgurClient
 from clarifai import rest
 from clarifai.rest import ClarifaiApp
 from datetime import datetime
+from myapp.key import API_KEY
 
 # Create your views here.
 def signup_view(request):
@@ -85,9 +86,9 @@ def post_view(request):
               client = ImgurClient('319feb40023adce', '2a01664decd3b8b2439bfce7caae16d47b671837')
               post.image_url = client.upload_from_path(path, anon=True)['link']
               post.save()
+              add_category(post)
 
               return redirect('/feed/')
-              app = ClarifaiApp(api_key='{b425c3af12b045a6a89ff65282cbb654}')
 
       else:
           form = PostForm()
@@ -108,7 +109,7 @@ def like_view(request):
                 else:
                     existing_like.delete()
 
-                return redirect('/feed/')
+                return redirect('feed/')
 
 
         else:
@@ -123,11 +124,34 @@ def comment_view(request):
             comment_text = form.cleaned_data.get('comment_text')
             comment = CommentModel.objects.create(user=user, post_id=post_id, comment_text=comment_text)
             comment.save()
-            return redirect('/feed/')
+            return redirect('/feed/    ')
         else:
             return redirect('/feed/')
     else:
         return redirect('/login')
+
+
+
+def add_category(post):
+    app = ClarifaiApp(api_key=API_KEY)
+    model = app.models.get("general-v1.3")
+    response = model.predict_by_url(url=post.image_url)
+
+    if response["status"]["code"] == 10000:
+        if response["outputs"]:
+            if response["outputs"][0]["data"]:
+                if response["outputs"][0]["data"]["concepts"]:
+                    for index in range(0, len(response["outputs"][0]["data"]["concepts"])):
+                        category = CategoryModel(post=post, category_text = response["outputs"][0]["data"]["concepts"][index]["name"])
+                        category.save()
+                else:
+                    print "No Concepts List Error"
+            else:
+                print "No Data List Error"
+        else:
+            print "No Outputs List Error"
+    else:
+        print "Response Code Error"
 
 
 def check_validation(request):

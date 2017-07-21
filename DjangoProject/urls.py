@@ -5,10 +5,10 @@ from django.contrib import admin
 
 
 urlpatterns = [
-    url(r'^admin/',admin.site.urls),
-    #url('comment/', comment_view),
+    #url(r'^admin/',admin.site.urls),
     url('post/', post_view),
     url('feed/', feed_view),
+    url('comment/', comment_view),
     url('like/', like_view),
     url('login/', login_view),
     url('', signup_view),
