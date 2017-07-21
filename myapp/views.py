@@ -13,6 +13,7 @@ from datetime import datetime
 
 # Create your views here.
 def signup_view(request):
+  today = datetime.now()
   if request.method == "POST":
       signup_form=SignUpForm(request.POST)
       if signup_form.is_valid():
@@ -25,7 +26,7 @@ def signup_view(request):
           return render(request, 'login.html')
   elif request.method == 'GET':
       signup_form= SignUpForm()
-  return render(request, 'index.html', {'form': signup_form})
+  return render(request, 'index.html', { 'date_to_show':today, 'form':signup_form})
 
 
 def login_view(request):
