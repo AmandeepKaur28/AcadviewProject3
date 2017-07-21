@@ -7,6 +7,8 @@ from django.contrib.auth.hashers import make_password,check_password
 from django.shortcuts import render,redirect
 from DjangoProject.settings import BASE_DIR
 from imgurpython import ImgurClient
+from clarifai import rest
+from clarifai.rest import ClarifaiApp
 from datetime import datetime
 
 # Create your views here.
@@ -84,6 +86,7 @@ def post_view(request):
               post.save()
 
               return redirect('/feed/')
+              app = ClarifaiApp(api_key='{b425c3af12b045a6a89ff65282cbb654}')
 
       else:
           form = PostForm()
