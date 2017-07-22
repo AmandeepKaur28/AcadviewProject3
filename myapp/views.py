@@ -171,6 +171,17 @@ def comment_view(request):
             comment_text = form.cleaned_data.get('comment_text')
             comment = CommentModel.objects.create(user=user, post_id=post_id, comment_text=comment_text)
             comment.save()
+            sg = sendgrid.SendGridAPIClient(apikey=(SENDGRID_API_KEY))
+            from_email = Email("samraoaman8@gmail.com")
+            to_email = Email(comment.post.user.email)
+            subject = "Welcome to Review book"
+            content = Content("text/plain", "someone just commented on your post. Go check")
+            mail = Mail(from_email, subject, to_email, content)
+            response = sg.client.mail.send.post(request_body=mail.get())
+            print(response.status_code)
+            print(response.body)
+            print(response.headers)
+            ctypes.windll.user32.MessageBoxW(0, u"comment posted successfully", u"SUCCESS", 0)
             return redirect('/feed/    ')
         else:
             return redirect('/feed/')
