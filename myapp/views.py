@@ -11,7 +11,13 @@ from clarifai import rest
 from clarifai.rest import ClarifaiApp
 from datetime import datetime
 from myapp.key import API_KEY
+# sendgrid api is used to send automated emails to users
+import sendgrid
+ # for this we import api key from api.py
+ # due to privacy concern i havent uploaded my apikey
+from sendgrid.helpers.mail import*
 
+SENDGRID_API_KEY='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'
 # Create your views here.
 def signup_view(request):
   today = datetime.now()
@@ -107,12 +113,21 @@ def like_view(request):
 
                 existing_like = LikeModel.objects.filter(post_id=post_id, user=user).first()
                 if not existing_like:
-                    LikeModel.objects.create(post_id=post_id, user=user)
+                    like=LikeModel.objects.create(post_id=post_id, user=user)
+                    sg = sendgrid.SendGridAPIClient(apikey=(SENDGRID_API_KEY))
+                    from_email = Email("samraoaman8@gmail.com")
+                    to_email = Email(like.post.user.email)
+                    subject = "Welcome"
+                    content = Content("text/plain", "someone just liked your post. Go checkout!")
+                    mail = Mail(from_email, subject, to_email, content)
+                    response = sg.client.mail.send.post(request_body=mail.get())
+                    print(response.status_code)
+                    print(response.body)
+                    print(response.headers)
                 else:
                     existing_like.delete()
 
                 return redirect('feed/')
-
 
         else:
             return redirect('/login/')
