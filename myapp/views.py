@@ -16,9 +16,12 @@ import sendgrid
  # for this we import api key from api.py
  # due to privacy concern i havent uploaded my apikey
 from sendgrid.helpers.mail import*
+from myapp.sendgrid_key import SENDGRID_API_KEY
+import ctypes
 
-SENDGRID_API_KEY='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'
+
 # Create your views here.
+
 def signup_view(request):
   today = datetime.now()
   if request.method == "POST":
@@ -28,12 +31,34 @@ def signup_view(request):
           name = signup_form.cleaned_data['name']
           email = signup_form.cleaned_data['email']
           password = signup_form.cleaned_data['password']
-          user = UserModel(name=name, password=make_password(password), email=email, username=username)
-          user.save()
-          return render(request, 'login.html')
+          if set('abcdefghijklmnopqrstuvwxyz').intersection(name) and set('abcdefghijklmnopqrstuvwxyz@_1234567890').intersection(username):
+              if len(username) > 4 and len(password) > 5:  #and username==""== False and username.isdigit() == False:
+                  user = UserModel(name=name, password=make_password(password), email=email, username=username)
+                  user.save()
+                  sg = sendgrid.SendGridAPIClient(apikey=(SENDGRID_API_KEY))
+                  from_email = Email("samraoaman8@gmail.com")
+                  to_email = Email(signup_form.cleaned_data['email'])
+                  subject = "Welcome "
+                  content = Content("text/plain", "Thank you for signing up ")
+                  mail = Mail(from_email, subject, to_email, content)
+                  response = sg.client.mail.send.post(request_body=mail.get())
+                  print(response.status_code)
+                  print(response.body)
+                  print(response.headers)
+                  ctypes.windll.user32.MessageBoxW(0, u"successfully signed up", u"success", 0)
+                  return render(request, 'login.html')
+              else:
+                  ctypes.windll.user32.MessageBoxW(0, u"invalid enteries. please try again", u"Error", 0)
+                  signup_form= SignUpForm()
+
+          else:
+              ctypes.windll.user32.MessageBoxW(0, u"invalid name/username", u"error", 0)
+
+
   elif request.method == 'GET':
       signup_form= SignUpForm()
   return render(request, 'index.html', { 'date_to_show':today, 'form':signup_form})
+
 
 
 def login_view(request):
@@ -54,13 +79,16 @@ def login_view(request):
                     response.set_cookie(key='session_token', value=token.session_token)
                     return response
                 else:
+                    ctypes.windll.user32.MessageBoxW(0, u"invalid username or password", u"Error", 0)
                     response_data['message'] = 'Incorrect Password! Please try again!'
+            else:
+                ctypes.windll.user32.MessageBoxW(0, u"invalid username/password", u"Error", 0)
 
     elif request.method == 'GET':
         form = LoginForm()
-
     response_data['form'] = form
     return render(request, 'login.html', response_data)
+
 
 def feed_view(request):
     user = check_validation(request)
@@ -88,12 +116,12 @@ def post_view(request):
               {tag.strip(" #") for tag in tags.replace('#', ' #').split() if tag.startswith(" #")}
               post = PostModel(user=user, image=image, caption=caption,tags=tags)
               post.save()
-
               path = str(BASE_DIR + post.image.url)
 
               client = ImgurClient('319feb40023adce', '2a01664decd3b8b2439bfce7caae16d47b671837')
               post.image_url = client.upload_from_path(path, anon=True)['link']
               post.save()
+              ctypes.windll.user32.MessageBoxW(0, u"post successsfully created", u"SUCCESS", 0)
               add_category(post)
 
               return redirect('/feed/')
@@ -124,8 +152,10 @@ def like_view(request):
                     print(response.status_code)
                     print(response.body)
                     print(response.headers)
+                    ctypes.windll.user32.MessageBoxW(0, u"liked successfully", u"SUCCESS", 0)
                 else:
                     existing_like.delete()
+                    ctypes.windll.user32.MessageBoxW(0, u"unlike successfully", u"SUCCESS", 0)
 
                 return redirect('feed/')
 
