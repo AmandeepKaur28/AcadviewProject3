@@ -11,8 +11,9 @@
         {% csrf_token %}
         <input type="submit" class="btn-default btn" value="Create Post">
     </form>
-
-    {% for post in posts %}
+    </form><br>
+       <a href="{%url 'logout'%}">Log out</a>
+        {% for post in posts %}
 
         <h3> Posted by: {{ post.user.username }} </h3>
         <p>[{{ post.created_on }}]</p>

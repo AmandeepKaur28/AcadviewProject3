@@ -29,6 +29,8 @@ class PostModel(models.Model):
   image = models.FileField(upload_to='user_images')
   image_url = models.CharField(max_length=255)
   caption = models.CharField(max_length=240)
+  tags=models.CharField(max_length=200)
+  #tags =models.ManyToManyField(Tag)
   created_on = models.DateTimeField(auto_now_add=True)
   updated_on = models.DateTimeField(auto_now=True)
 
@@ -59,4 +61,8 @@ class CommentModel(models.Model):
 class CategoryModel(models.Model):
     post = models.ForeignKey(PostModel)
     category_text = models.CharField(max_length=555)
+
+#class Tag(models.Model):
+    #tag_name = models.CharField(max_length=50)
+
 

@@ -78,7 +78,9 @@ def post_view(request):
           if form.is_valid():
               image = form.cleaned_data.get('image')
               caption = form.cleaned_data.get('caption')
-              post = PostModel(user=user, image=image, caption=caption)
+              tags=form.cleaned_data.get('tags')
+              {tag.strip(" #") for tag in tags.replace('#', ' #').split() if tag.startswith(" #")}
+              post = PostModel(user=user, image=image, caption=caption,tags=tags)
               post.save()
 
               path = str(BASE_DIR + post.image.url)
@@ -159,6 +161,18 @@ def add_category(post):
     else:
         print "Response Code Error"
 
+#def workout(request, genre=None):
+    #if not request.is_login():
+        #return render(request,'/login/')
+    #else:
+        #posts=PostModel.objects.filter('workout'in genre)
+        
+
+
+
+
+
+
 
 def check_validation(request):
     if request.COOKIES.get('session_token'):
@@ -167,3 +181,9 @@ def check_validation(request):
            return session.user
     else:
         return None
+
+def logout_view(request):   #for logging out the user
+    request.session.modified = True
+    response = redirect('/login/')
+    response.delete_cookie(key='session_token')
+    return response
