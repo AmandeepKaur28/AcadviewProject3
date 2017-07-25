@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/DjangoProject.iml" filepath="$PROJECT_DIR$/.idea/DjangoProject.iml" />
+      <module fileurl="file://$USER_HOME$/dj/.idea/dj.iml" filepath="$USER_HOME$/dj/.idea/dj.iml" />
+      <module fileurl="file://C:\Users\dell\DjangoProject\dj\.idea\djangoP.iml" filepath="C:\Users\dell\DjangoProject\dj\.idea\djangoP.iml" />
       <module fileurl="file://$USER_HOME$/PycharmProjects/instabot/.idea/instabot.iml" filepath="$USER_HOME$/PycharmProjects/instabot/.idea/instabot.iml" />
     </modules>
   </component>

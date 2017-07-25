@@ -2,14 +2,15 @@
 from __future__ import unicode_literals
 from myapp.forms import SignUpForm
 from myapp.forms import LoginForm ,PostForm,LikeForm,CommentForm
-from models import UserModel,SessionToken,PostModel,LikeModel,CommentModel,CategoryModel
-from django.contrib.auth.hashers import make_password,check_password
-from django.shortcuts import render,redirect
+from models import UserModel,SessionToken,PostModel,LikeModel,CommentModel,CategoryModel# models are imported.
+# in this file we are adding functionality to our project
+from django.contrib.auth.hashers import make_password,check_password #hashers  converts passwords to hashcode so that they are safe and increases privacy
+from django.shortcuts import render,redirect #from django we import forms that we want to view
 from DjangoProject.settings import BASE_DIR
 from imgurpython import ImgurClient
 from clarifai import rest
 from clarifai.rest import ClarifaiApp
-from datetime import datetime
+from datetime import datetime## datetime module is used to display time
 from myapp.key import API_KEY
 # sendgrid api is used to send automated emails to users
 import sendgrid
@@ -20,21 +21,20 @@ from myapp.sendgrid_key import SENDGRID_API_KEY
 import ctypes
 
 
-# Create your views here.
 
-def signup_view(request):
+def signup_view(request): #function declaration which is used to show signup page to save the information of new user
   today = datetime.now()
   if request.method == "POST":
-      signup_form=SignUpForm(request.POST)
+      signup_form=SignUpForm(request.POST)#save the details in the database
       if signup_form.is_valid():
           username = signup_form.cleaned_data['username']
           name = signup_form.cleaned_data['name']
           email = signup_form.cleaned_data['email']
           password = signup_form.cleaned_data['password']
           if set('abcdefghijklmnopqrstuvwxyz').intersection(name) and set('abcdefghijklmnopqrstuvwxyz@_1234567890').intersection(username):
-              if len(username) > 4 and len(password) > 5:  #and username==""== False and username.isdigit() == False:
+              if len(username) > 4 and len(password) > 5:#this is for that username should be greater than 4 and pswrd should be greater then 5
                   user = UserModel(name=name, password=make_password(password), email=email, username=username)
-                  user.save()
+                  user.save() # saves the user information
                   sg = sendgrid.SendGridAPIClient(apikey=(SENDGRID_API_KEY))
                   from_email = Email("samraoaman8@gmail.com")
                   to_email = Email(signup_form.cleaned_data['email'])
@@ -61,8 +61,8 @@ def signup_view(request):
 
 
 
-def login_view(request):
-    response_data = {}
+def login_view(request): # this funtion is for showing the login page for a user that have an account
+    response_data = {} # dictionary
     if request.method == "POST":
         form = LoginForm(request.POST)
         if form.is_valid():
@@ -79,7 +79,7 @@ def login_view(request):
                     response.set_cookie(key='session_token', value=token.session_token)
                     return response
                 else:
-                    ctypes.windll.user32.MessageBoxW(0, u"invalid username or password", u"Error", 0)
+                    ctypes.windll.user32.MessageBoxW(0, u"invalid username or password", u"Error", 0)# to show message box
                     response_data['message'] = 'Incorrect Password! Please try again!'
             else:
                 ctypes.windll.user32.MessageBoxW(0, u"invalid username/password", u"Error", 0)
@@ -90,10 +90,10 @@ def login_view(request):
     return render(request, 'login.html', response_data)
 
 
-def feed_view(request):
+def feed_view(request):# feed funtion is used to show posts of the user
     user = check_validation(request)
     if user:
-        posts = PostModel.objects.all().order_by('created_on')
+        posts = PostModel.objects.all().order_by('-created_on')
         for post in posts:
             existing_like = LikeModel.objects.filter(post_id=post.id, user=user).first()
             if existing_like:
@@ -104,35 +104,39 @@ def feed_view(request):
     else:
         return redirect('/login/')
 
-def post_view(request):
-  user = check_validation(request)
-  if user:
-      if request.method == 'POST':
-          form = PostForm(request.POST, request.FILES)
-          if form.is_valid():
-              image = form.cleaned_data.get('image')
-              caption = form.cleaned_data.get('caption')
-              tags=form.cleaned_data.get('tags')
-              {tag.strip(" #") for tag in tags.replace('#', ' #').split() if tag.startswith(" #")}
-              post = PostModel(user=user, image=image, caption=caption,tags=tags)
-              post.save()
-              path = str(BASE_DIR + post.image.url)
+def post_view(request):# post view funtion is used to upload file or image that you want to add to the feed and also provide funtionality to add caption also
+    user = check_validation(request)
 
-              client = ImgurClient('319feb40023adce', '2a01664decd3b8b2439bfce7caae16d47b671837')
-              post.image_url = client.upload_from_path(path, anon=True)['link']
-              post.save()
-              ctypes.windll.user32.MessageBoxW(0, u"post successsfully created", u"SUCCESS", 0)
-              add_category(post)
+    if user:
+        if request.method == 'POST':
+            form = PostForm(request.POST, request.FILES)
+            if form.is_valid():
+                image = form.cleaned_data.get('image')
+                caption = form.cleaned_data.get('caption')
+                post = PostModel(user=user, image=image, caption=caption)
+                post.save()
 
-              return redirect('/feed/')
+                path = str(BASE_DIR + '\\' + post.image.url)
 
-      else:
-          form = PostForm()
-      return render(request, 'post.html', {'form': form})
-  else:
-      return redirect('/login/')
+                client = ImgurClient('319feb40023adce', '2a01664decd3b8b2439bfce7caae16d47b671837')
+                post.image_url = client.upload_from_path(path, anon=True)['link']
+                post.save()
 
-def like_view(request):
+                add_category(post)
+                ctypes.windll.user32.MessageBoxW(0, u"post successsfully created", u"SUCCESS", 0)
+
+                return redirect('/feed/')
+
+        else:
+            form = PostForm()
+        return render(request, 'post.html', {'form': form})
+    else:
+        return redirect('/login/')
+
+
+
+
+def like_view(request):# this function used for like the post of user and if it is already liked then it unlike thet post
         user = check_validation(request)
         if user and request.method == 'POST':
             form = LikeForm(request.POST)
@@ -162,7 +166,7 @@ def like_view(request):
         else:
             return redirect('/login/')
 
-def comment_view(request):
+def comment_view(request):# this function used for posting comment on the post of the user
     user = check_validation(request)
     if user and request.method == 'POST':
         form = CommentForm(request.POST)
@@ -188,18 +192,10 @@ def comment_view(request):
     else:
         return redirect('/login')
 
-
-
-def add_category(post):
+def add_category(post): #this function is used to show the category of the images using clarifai api
     app = ClarifaiApp(api_key=API_KEY)
     model = app.models.get("general-v1.3")
     response = model.predict_by_url(url=post.image_url)
-
-
-    # Logo model
-    #model = app.models.get('logo')
-
-    #response = model.predict_by_url(url=post.image_url)
 
     if response["status"]["code"] == 10000:
         if response["outputs"]:
@@ -217,19 +213,6 @@ def add_category(post):
     else:
         print "Response Code Error"
 
-#def workout(request, genre=None):
-    #if not request.is_login():
-        #return render(request,'/login/')
-    #else:
-        #posts=PostModel.objects.filter('workout'in genre)
-        
-
-
-
-
-
-
-
 def check_validation(request):
     if request.COOKIES.get('session_token'):
         session = SessionToken.objects.filter(session_token=request.COOKIES.get('session_token')).first()
@@ -238,8 +221,9 @@ def check_validation(request):
     else:
         return None
 
-def logout_view(request):   #for logging out the user
+def logout_view(request):   #for logging out the user from the account
     request.session.modified = True
     response = redirect('/login/')
     response.delete_cookie(key='session_token')
     return response
+
